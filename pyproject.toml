@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "computaco"
+version = "0.1.0"
+description = ""
+authors = ["Jacob Valdez <jacob.valdez@limboid.ai>"]
+readme = "README"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+dumpwd = { git = "https://github.com/Limboid/dumpwd.git" }
+computils = { git = "https://github.com/Limboid/computils.git" }
+openai = "^0.27.2"
+langchain = "^0.0.117"
+pillow = "^9.4.0"
+ivy = {version = "^6.4.1", extras = ["all"]}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

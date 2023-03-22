@@ -1,0 +1,41 @@
+# ComputaCo
+
+- There is initially only one agent, the organizer
+- The user can converse with any agent
+- The organizer develops a strategy which may involve creating new agents
+
+## Example Strategies
+
+### Waterfall SDLC
+
+```python
+customer = human
+requirements = establish_requirements(customer)
+design = establish_design(requirements)
+code = write_code(design)
+tests = write_tests(code)
+results = run_tests(tests)
+documentation = write_documentation(results)
+```
+
+### Agile SDLC
+
+```python
+customer = human
+requirements = establish_requirements(customer)
+
+
+
+Human: "I want a website"
+
+#####################################################3
+
+```
+
+running directory
+
+artifact directories
+
+```
+
+and for repos built by ai, maybe the running directory should be `artifact_dir/.computacode`
