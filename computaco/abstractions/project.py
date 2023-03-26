@@ -9,6 +9,7 @@ import git
 
 class Project:
 
+    name: str
     path: Path
     repo: Repo = None
     summary: str = ""
@@ -50,3 +51,10 @@ class Project:
                 f"{len(self.repo.heads)}-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')}"
             )
         self.repo.index.commit(message)
+
+    def __repr__(self):
+        return self.name
+
+    @property
+    def datapath(self):
+        return self.path / ".computaco"

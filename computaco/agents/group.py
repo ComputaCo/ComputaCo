@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from computaco.abstractions.conversation import Message
+from computaco.environments.conversation import TextMessage
 from computaco.utils import english
 from computaco.agents.agent import Agent
 from computaco.organizations.organization import Organization
@@ -16,5 +16,8 @@ class Group(Agent):
         self.people = people
         self.name = name or english.join([person.name for person in people])
 
-    def chat(self, msg: Message, reply=True, remember=True, *args, **kwargs) -> str:
+    def talk(self, remember=True, **kwargs) -> str:
+        raise NotImplementedError
+
+    def tell(self, text, *args, sender="Info", remember=True, **kwargs):
         raise NotImplementedError

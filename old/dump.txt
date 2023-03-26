@@ -1,0 +1,749 @@
+├── consensus_building.py
+├── round_robin_discussion.py
+├── topic_exploration.py
+├── goal_oriented_conversation.py
+├── peer_review.py
+├── negotiation.py
+├── manage.py
+├── rapid_problem_solving.py
+├── question_and_answer_session.py
+├── dump.txt
+├── storytelling.py
+├── meeting.py
+├── debate.py
+├── casual_conversation.py
+├── brainstorm.py
+├── idea_rating_and_improvement.py
+└── presentation.py
+# ./consensus_building.py:
+```
+from pathlib import Path
+from computaco.processes.communication.goal_oriented_conversation import (
+    goal_oriented_conversation,
+)
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def consensus_building(
+    conversation: Conversation,
+    topic: str,
+    agents: list[Agent],
+) -> list[Message]:
+    """
+    This implementation creates a conversation with all the agents participating in the consensus building session. Each agent shares their opinion, and the conversation proceeds until all agents agree that they've reached a consensus. The final list of opinions is then returned as output.
+    """
+    conversation(f"Now let's build a consensus on the topic: {topic}")
+    conversation.converse_until_done(
+        is_done_message="Have we reached a consensus on {topic}?",
+        evaluators=agents,
+    )
+    messages_before_conclusion = len(conversation.messages)
+    conversation(f"Please share your final thoughts about {topic}.")
+    messages_after_conclusion = len(conversation.messages)
+    return conversation.messages[messages_before_conclusion:messages_after_conclusion]
+
+```
+
+
+# ./round_robin_discussion.py:
+```
+# ./round_robin_discussion.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def round_robin_discussion(
+    path: Path,
+    topic: str,
+    agents: list[Agent],
+    rounds: int,
+):
+    """
+    Organizes a round-robin-style discussion between agents, where each agent takes turns to contribute to a topic, building upon the ideas of the previous agent.
+    This can be useful for collaborative brainstorming and ensuring all agents have an opportunity to share their thoughts.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"Let's discuss the topic: {topic}",
+        final_message=f"Discussion of {topic} completed.",
+    ) as conversation:
+        for round in range(rounds):
+            conversation.step()
+
+            # Check if the agents agree to end the discussion
+            for agent in agents:
+                if not tc.decide(
+                    agent("Do you want to stay in the conversation?", remember=False)
+                ):
+                    break  # break inner loop if an agent does not want to end the discussion
+            else:
+                break  # break outer loop once all agents agree to end the discussion
+
+```
+
+
+# ./topic_exploration.py:
+```
+# ./topic_exploration.py:
+
+from pathlib import Path
+from computaco.utils import english
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def topic_exploration(
+    path: Path,
+    topic: str,
+    subtopics: list[str],
+    agents: list[Agent],
+):
+    """
+    Organizes a topic exploration session where agents discuss a topic, diving deeper into subtopics.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"Let's explore the topic: {topic}. We will dive into {len(subtopics)} subtopics: {english.join(subtopics)}.",
+        final_message=f"Topic exploration of {topic} completed.",
+    ) as conversation:
+
+        # Topic exploration phase
+        for i, subtopic in enumerate(subtopics):
+            if i == 0:
+                conversation.input(f"We'll start with subtopic {i+1}: {subtopic}.")
+            else:
+                conversation.input(f"Now let's dive into subtopic {i+1}: {subtopic}.")
+            conversation.step()
+
+```
+
+
+# ./goal_oriented_conversation.py:
+```
+from pathlib import Path
+import tensorcode as tc
+
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def goal_oriented_conversation(
+    conversation: Conversation,
+    speakers: list[Agent],
+    evaluators: list[Agent],
+    initial_prompt: str | Message,
+    decision_prompt: str | Message,
+    conclusion_prompt: str | Message,
+) -> list[Message]:
+    """
+    Iterate through a list of Agents and prompt them to make decisions until all agents have made a decision.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        speakers,
+        initial_message=initial_prompt,
+        final_message=conclusion_prompt,
+    ) as conversation:
+        conversation.input(initial_prompt)
+
+        # Continue the conversation until all agents have made a decision
+        while True:
+            conversation.step()
+
+            # Check if each agent has made a decision
+            for agent in speakers:
+                if not tc.decide(agent(decision_prompt, remember=False)):
+                    break  # break inner loop if an agent has not made a decision
+            else:
+                break  # break outer loop once all agents have made a decision
+
+        # Collect the final output from each agent after inputting the conclusion message
+        final_outputs = []
+        for agent in speakers:
+            final_output = agent(conclusion_prompt)
+            final_outputs.append(final_output)
+            conversation.input(final_output)
+
+    return final_outputs
+
+```
+
+
+# ./peer_review.py:
+```
+# ./peer_review.py:
+
+from pathlib import Path
+
+import tensorcode as tc
+
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def peer_review(
+    path: Path,
+    topic: str,
+    presenter: Agent,
+    reviewers: list[Agent],
+    rebuttals: int = 3,
+):
+    """
+    Organizes a peer review session where one agent presents their work, and other agents provide feedback, critique, or suggestions for improvement.
+
+    Args:
+        presenter (Agent): The Agent object representing the presenter.
+        reviewers (list[Agent]): A list of Agent objects representing the reviewers.
+        rebuttals (int): The number of rebuttals the presenter has to address the feedback from reviewers.
+    """
+
+    agents = [presenter] + reviewers
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"We will now peer review {presenter.name}'s work on {topic}.",
+        final_message=f"Peer review of {presenter.name}'s work on {topic} completed.",
+    ) as conversation:
+
+        # Presenter shares their work
+        presentation = presenter(f"Please present your work on {topic}.")
+        conversation.input(presentation)
+
+        # Reviewers provide feedback
+        for reviewer in reviewers:
+            feedback = reviewer(
+                f"Please provide feedback on {presenter.name}'s presentation."
+            )
+            conversation.input(feedback)
+
+        # Presenter responds to feedback with rebuttals
+        presenter.input("Please respond to the feedback from the reviewers.")
+        for _ in range(rebuttals):
+            rebuttal = presenter.output()
+            conversation.input(rebuttal)
+
+```
+
+
+# ./negotiation.py:
+```
+# ./negotiation.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def negotiation(
+    path: Path,
+    agents_and_goals: list[tuple[Agent, str]],
+) -> list[Message]:
+    """
+    Simulates negotiation between agents, where each agent has its own interests, preferences, or objectives.
+    The goal would be to reach a mutually beneficial agreement or compromise.
+    """
+    agents = [agent for agent, _ in agents_and_goals]
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message="Let's negotiate!",
+        final_message="The negotiation is complete.",
+    ) as conversation:
+
+        # Assign the negotiation goals to each agent
+        for agent, goal in agents_and_goals:
+            agent.input(f"Your negotiation goal is: {goal}")
+
+        while True:
+            conversation.step()
+
+            # Check if each agent agrees the negotiation is complete
+            for agent in agents:
+                if not tc.decide(
+                    agent("Are you satisfied with the current agreement?", remember=False)
+                ):
+                    break  # break inner loop if an agent does not think the negotiation is complete
+            else:
+                break  # break outer loop once all agents agree the negotiation is complete
+
+    # Collect the final agreements or compromises from each agent
+    final_agreements = []
+    for agent in agents:
+        final_agreement = agent("Please share your final agreement or compromise.")
+        final_agreements.append(final_agreement)
+        conversation.input(final_agreement)
+
+    return final_agreements
+
+```
+
+
+# ./manage.py:
+```
+import tensorcode as tc
+
+from pathlib import Path
+
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def manage(
+    path: Path,
+    task: str,
+    initial_message: str | Message,
+    produce_report_message: str | Message,
+    manager: Agent,
+    worker: Agent,
+):
+    """
+    Manages a task by delegating it to a worker and then checking the worker's report.
+    """
+    with Conversation(
+        path / "conversation",
+        [manager, worker],
+        initial_message="",
+        final_message="",
+    ) as conversation:
+        conversation.input(initial_message)  # Now let's {do task}.
+
+        manager.input(f"Tell {worker.name} to {task}.")
+        conversation.input(manager.output())
+
+        while True:
+            if not tc.decide(
+                worker(f"Has {manager.name} finished explaining {task}?", remember=False)
+            ):
+                conversation.input(worker.output())
+                conversation.input(manager.output())
+            else:
+                report = worker(produce_report_message)
+                conversation.input(report)
+                if tc.decide(
+                    manager(
+                        f"Are you satisfied with {worker.name}'s {task}?",
+                        remember=False,
+                    )
+                ):
+                    return report
+                conversation.input(
+                    manager(f"Please explain what you would like to change.")
+                )
+
+```
+
+
+# ./rapid_problem_solving.py:
+```
+# ./rapid_problem_solving.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def rapid_problem_solving(
+    path: Path,
+    problem: str,
+    agents: list[Agent],
+    rounds: int = 5,
+):
+    """
+    Organizes a rapid problem-solving session where agents attempt to solve a problem within a given time limit.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"Let's solve the problem: {problem}. You have {rounds} rounds to find a solution.",
+    ) as conversation:
+
+        # Rapid problem-solving phase
+        for round in range(rounds):
+            if round > 0:
+                conversation.input(f"{rounds-round} rounds remaining.")
+
+            for agent in agents:
+                solution_attempt = agent.output()
+                conversation.input(solution_attempt)
+
+                if tc.decide(agent("Did you find a solution?", remember=False)):
+                    conversation.input("The problem has been solved.")
+                    return solution_attempt
+
+        conversation.input(
+            "Time's up! The problem could not be solved within the given time limit."
+        )
+
+```
+
+
+# ./question_and_answer_session.py:
+```
+# ./question_and_answer_session.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def question_and_answer_session(
+    path: Path,
+    topic: str,
+    questioners: list[Agent],
+    answerers: list[Agent],
+    conclusion_prompt: str | Message = "What did you learn?",
+):
+    """
+    Facilitates a question-and-answer session between agents, where one or multiple agents can ask questions, and others provide answers or insights.
+    This can be useful for knowledge sharing or problem-solving.
+    """
+
+    participants = questioners + answerers
+
+    # Start a conversation with the participants
+    with Conversation(
+        path / "conversation",
+        participants,
+        initial_message="",
+        final_message="",
+    ) as conversation:
+        while True:
+            # Questioners ask questions
+            for questioner in questioners:
+                question = questioner.output()
+                conversation.input(question)
+
+            # Answerers provide answers or insights
+            for answerer in answerers:
+                answer = answerer.output()
+                conversation.input(answer)
+
+            # Check if the participants agree to end the Q&A session
+            for participant in participants:
+                if not tc.decide(
+                    participant("Should we end the Q&A session?", remember=False)
+                ):
+                    break  # break inner loop if a participant does not want to end the session
+            else:
+                break  # break outer loop once all participants agree to end the session
+
+        conclusions = []
+        for questioner in questioners:
+            conclusions.append(questioner(conclusion_prompt))
+        return conclusions
+
+```
+
+
+# ./dump.txt:
+```
+
+```
+
+
+# ./storytelling.py:
+```
+# ./storytelling.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def storytelling(path: Path, topic: str, storyteller: Agent, audience: list[Agent]):
+    """
+    Facilitates storytelling between agents, where each agent contributes to the development of a narrative.
+    This can be useful for creative writing, idea generation, or building shared understanding through stories.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        [storyteller] + audience,
+        initial_message=f"{storyteller.name} will now tell a story about {topic}.",
+        final_message=f"Storytime is over. Thank you for listening to {storyteller.name}.",
+    ) as conversation:
+        while True:
+            storyteller("Please continue the story.")
+            conversation.input(storyteller.output())
+
+            if tc.decide(storyteller("Is that the end?", remember=False)):
+                break
+
+```
+
+
+# ./meeting.py:
+```
+from pathlib import Path
+from computaco.agents.agent import Agent
+from computaco.environments.conversation import Conversation, Message
+
+
+class AgendaItem:
+
+    description: str
+    initial_rounds: int = 2
+    evaluation_criteria: list[tuple[Agent, str]]
+
+
+def 
+
+
+
+class Meeting(Conversation):
+
+    agenda: list[AgendaItem]
+
+    def __init__(
+        self,
+        agenda: list[AgendaItem],
+        path: Path,
+        speakers: list[Agent] = [],
+        bystanders: list[Agent] = [],
+        initial_message: str | Message = None,
+        final_message: str | Message = None,
+    ):
+        super().__init__(path, speakers, bystanders, initial_message, final_message)
+        self.agenda = agenda
+
+```
+
+
+# ./debate.py:
+```
+from pathlib import Path
+from computaco.environments.conversation import Conversation, TextMessage
+from computaco.agents.agent import Agent
+
+
+def debate(
+    path: Path,
+    topic: str,
+    agents_and_positions: list[tuple[Agent, str]],
+    rounds: int,
+):
+    """
+    Organizes a debate session where agents debate a topic, taking turns to state their position and respond to other agents' positions.
+    """
+    # Initialize debate
+    for agent, position in agents_and_positions:
+        agent.state(f"Your position on {topic} is: {position}")
+
+    agents = [agent for agent, _ in agents_and_positions]
+
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"Now let's debate the topic: {topic}",
+        final_message="The debate is over.",
+    ) as conversation:
+
+        for round in range(1, rounds + 1):
+            conversation.input(TextMessage("Info", f"Round {round} out of {rounds+1}"))
+            for agent, position in agents_and_positions:
+                # Agent states their position
+                conversation.input(agent.output())
+                # Allow other agents to respond
+                for responder in agents:
+                    if responder != agent:
+                        conversation.input(responder.output())
+
+    # Collect final thoughts from agents
+    final_thoughts = []
+    for agent, position in agents_and_positions:
+        final_thought = agent(
+            TextMessage("Instructions", f"Please share your final thoughts on {topic}.")
+        )
+        final_thoughts.append(final_thought)
+        conversation.input(final_thought)
+
+    return final_thoughts
+
+```
+
+
+# ./casual_conversation.py:
+```
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.utils import english
+from computaco.agents.agent import Agent
+
+
+def casual_conversation(conversation: Conversation, rounds=100):
+    """
+    Starts an endless conversation with the agents.
+    """
+    conversation(
+        f"{english.join(conversation.participants)} are having a casual conversation."
+    )
+    conversation.converse(rounds=rounds)
+    conversation("The conversation has ended.")
+
+```
+
+
+# ./brainstorm.py:
+```
+from pathlib import Path
+from computaco.processes.communication.goal_oriented_conversation import (
+    goal_oriented_conversation,
+)
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def brainstorm(
+    conversation: Conversation,
+    topic: str,
+    agents: list[Agent],
+) -> list[Message]:
+    """
+    This implementation creates a conversation with all the agents participating in the brainstorming session. Each agent generates an idea, and the conversation proceeds until all agents agree that they've finished brainstorming. The final list of ideas is then returned as output.
+    """
+    conversation(f"Now let's brainstorm on the topic: {topic}")
+    conversation.converse_until_done(
+        is_done_message="Have we finished brainstorming about {topic}?",
+        evaluators=agents,
+    )
+    conversation("Please share your final ideas about {topic}.")
+
+```
+
+
+# ./idea_rating_and_improvement.py:
+```
+# ./idea_rating_and_improvement.py:
+
+from pathlib import Path
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+import tensorcode as tc
+
+
+def idea_rating_and_improvement(
+    path: Path,
+    topic: str,
+    agents: list[Agent],
+    iterations: int = 2,
+    generation_rounds_per_iteration: int = 1,
+):
+    """
+    Organizes a discussion where agents generate ideas, rate them, and suggest improvements.
+    """
+
+    # Start a conversation with the agents
+    with Conversation(
+        path / "conversation",
+        agents,
+        initial_message=f"Let's generate ideas for {topic}.",
+        final_message=f"We're done generating ideas for {topic}.",
+    ) as conversation:
+        for iteration in range(iterations):
+            # Idea generation phase
+            agents_and_ideas = []
+            conversation.input(
+                "Let's start generating ideas."
+                if iteration == 0
+                else "Let's go back to the generation stage."
+            )
+            for _ in range(generation_rounds_per_iteration):
+                for agent in agents:
+                    idea = agent.output()
+                    conversation.input(idea)
+                    agents_and_ideas.append((agent, idea))
+
+            for agent, idea in agents_and_ideas:
+
+                # Idea rating phase
+                conversation.input(
+                    f"Please rate {agent.name}'s idea:\n{idea} (terrible, bad, okay, good, great)"
+                )
+                for _agent in agents:
+                    if agent is _agent:
+                        continue
+                    conversation.input(_agent.output())
+
+                # Idea improvement phase
+                conversation.input(f"Let's discuss how to improve {agent.name}'s idea.")
+                for _agent in agents:
+                    conversation.input(
+                        _agent(f"How would you improve {agent.name}'s idea?")
+                    )
+
+```
+
+
+# ./presentation.py:
+```
+# ./presentation.py:
+from pathlib import Path
+import tensorcode as tc
+
+from computaco.environments.conversation import Conversation, Message, TextMessage
+from computaco.agents.agent import Agent
+
+
+def presentation(
+    path: Path,
+    topic: str,
+    presenter: Agent,
+    audience: list[Agent],
+) -> list[Message]:
+    """
+    Allows the presenter agent to give a presentation on a topic.
+    The audience can ask questions or provide feedback after the presentation.
+    """
+
+    # Start a conversation with the presenter and the audience
+    with Conversation(
+        path / "conversation",
+        [presenter] + audience,
+        initial_message=f"We will now listen to {presenter.name} present on the topic: {topic}.",
+        final_message=f"Thank you for attending the presentation.",
+    ) as conversation:
+        # Input the initial instruction into the conversation
+        conversation.input(presenter(f"Please give a presentation on the topic: {topic}"))
+
+        # The presenter presents the topic
+        while not tc.decide(presenter("Is your presentation complete?", remember=False)):
+            conversation.input(presenter.output())
+
+        # The audience asks questions or provides feedback
+        final_feedback_messages = []
+        for agent in audience:
+            feedback = agent(
+                f"Please ask {presenter.name} questions or provide feedback on {topic}.",
+            )
+            final_feedback_messages.append(feedback)
+            conversation.input(feedback)
+
+    return final_feedback_messages
+
+```
+
+

@@ -39,3 +39,18 @@ artifact directories
 ```
 
 and for repos built by ai, maybe the running directory should be `artifact_dir/.computacode`
+
+###########################################################
+
+- Modality is hard to abstract away
+- GUI agents and LLM agents
+- Some tasks are better for pure LLM's and others are better for pure GUI models
+- But there can be a VisionToCaption wrapper to let LLM's "see"
+- (The GUI models don't need a wrapper since they alrady accept text)
+- But I think i'd like more standardized interfaces anyway
+
+LanguageTool
+
+VisionLanguageTool
+
+

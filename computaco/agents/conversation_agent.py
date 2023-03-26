@@ -1,4 +1,4 @@
-from computaco.abstractions.conversation import Conversation, Message
+from computaco.environments.conversation import Conversation, TextMessage
 from computaco.agents.agent import Agent
 from computils.engines.base import CompletionEngine, ConversationEngine
 
@@ -15,22 +15,22 @@ class ConversationAgent(Agent):
 
     def __init__(self, name, initial_message=None, engine=None):
         super().__init__(name=name)
-        self._messages = Conversation(
-            Message(
-                initial_message or self.DEFAULT_SYSTEM_PROMPT.format(name=name),
-                "system",
-            )
-        )
-        self.engine = engine or self.DEFAULT_ENGINE
+        # TODO use langchain models from registry
+        ### self._messages = Conversation(
+        ###     Message(
+        ###         initial_message or self.DEFAULT_SYSTEM_PROMPT.format(name=name),
+        ###         "system",
+        ###     )
+        ### )
+        ### self.engine = engine or self.DEFAULT_ENGINE
 
-    def chat(self, msg: Message, reply=True, remember=True, *args, **kwargs) -> str:
-        messages = self.messages.copy()
-        messages.append(msg)
-        if isinstance(self.engine, ConversationEngine):
-            response = self.engine.chat(messages.to_json(), **kwargs)
-        elif isinstance(self.engine, CompletionEngine):
-            response = self.engine.complete(messages.to_string(), **kwargs)
-        messages.append(Message(response, self.name))
-        if remember:
-            self.messages = messages
-        return response
+        ## messages = self.messages.copy()
+        ## messages.append(msg)
+        ## if isinstance(self.engine, ConversationEngine):
+        ##     response = self.engine.chat(messages.to_json(), **kwargs)
+        ## elif isinstance(self.engine, CompletionEngine):
+        ##     response = self.engine.complete(messages.to_string(), **kwargs)
+        ## messages.append(Message(response, self.name))
+        ## if remember:
+        ##     self.messages = messages
+        ## return response

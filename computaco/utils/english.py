@@ -1,3 +1,6 @@
+from textwrap import dedent
+
+
 def join(items):
     if len(items) == 0:
         return ""
@@ -7,3 +10,7 @@ def join(items):
         return f"{items[0]} and {items[1]}"
     else:
         return f"{', '.join(items[:-1])}, and {items[-1]}"
+
+
+def prepare(text):
+    return dedent(text).strip()
