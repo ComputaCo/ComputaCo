@@ -1,4 +1,6 @@
 from typing import Literal, Optional
+
+import attr
 from computaco.abstractions import abilities
 from computaco.environments.conversation import (
     AudioMessage,
@@ -14,56 +16,17 @@ from computaco.abstractions.types import Audio, Image, Text, Video
 
 
 class Agent(abilities.HandlesAnyInputOutput):
-    name: str
-    pronoun: str
-    possessive_pronoun: str
+    name: str = attr.ib()
+    pronoun: str = attr.ib(default='he')
+    object_pronoun: str = attr.ib(default='him')
+    possessive_pronoun: str = attr.ib(default='his')
 
-    system_conversation: Optional[Conversation] = None
+    INPUT = str
+    OUTPUT = str
 
-    def input(self, message: str | Message | None, *args, remember=True, **kwargs):
-        # not using elif since a message can be of multiple types
-        if message is None:
-            return
-        if isinstance(message, str):
-            message = TextMessage("System", text=message)
-        if isinstance(message, TextMessage):
-            self.input_text(
-                message.text, *args, sender=message.sender, remember=remember, **kwargs
-            )
-        if isinstance(message, ImageMessage):
-            self.input_image(
-                message.image, *args, sender=message.sender, remember=remember, **kwargs
-            )
-        if isinstance(message, AudioMessage):
-            self.input_audio(
-                message.audio, *args, sender=message.sender, remember=remember, **kwargs
-            )
-        if isinstance(message, VideoMessage):
-            self.input_video(
-                message.video, *args, sender=message.sender, remember=remember, **kwargs
-            )
+    def input(self, input: INPUT, *args, remember=True, **kwargs):
 
-    def output(self, *args, remember=True, **kwargs) -> Message | None:
-        output_type = self.output_type(*args, remember=remember, **kwargs)
-        if output_type is None:
-            return None
-        elif output_type == Text:
-            return TextMessage(self.name, text=self.output_text(*args, **kwargs))
-        elif output_type == Image:
-            return ImageMessage(self.name, image=self.output_image(*args, **kwargs))
-        elif output_type == Audio:
-            return AudioMessage(self.name, audio=self.output_audio(*args, **kwargs))
-        elif output_type == Video:
-            return VideoMessage(self.name, video=self.output_video(*args, **kwargs))
-        elif output_type == "Multiple":
-            raise NotImplementedError("Multiple output types not implemented yet")
-        else:
-            raise ValueError(f"Unknown output type: {output_type}")
-
-    def output_type(
-        self, *args, remember=True, **kwargs
-    ) -> Literal["Text", "Image", "Audio", "Video", "Multiple", "None"]:
-        raise NotImplementedError()
+    def output(self, *args, remember=True, **kwargs) -> OUTPUT:
 
     # Agents CAN support multitasking. Processes canNOT.
     def fork(self):

@@ -42,7 +42,6 @@ from computaco.tools.tool import Tool
 from computaco.utils.logging import make_logger
 
 
-
 # computaco/tools/tool.py
 import attr
 

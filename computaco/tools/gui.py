@@ -10,6 +10,9 @@ from computaco.tools.tool import Tool
 
 @attr.s
 class GUI(Tool):
+
+    # TODO: add OCR support
+
     @dataclass
     class T_INPUT:
         mouse_movement: tuple[int, int]
@@ -26,4 +29,4 @@ class GUI(Tool):
         text_output: str = None  # convenience alternative to keyboard_state
 
     def _fn(self, agent: Agent, input: GUI.T_INPUT) -> GUI.T_OUTPUT:
-        raise NotImplementedError()  # Imlpement this.
+        raise NotImplementedError()  # Imlpement this using ComputerEnv

@@ -1,4 +1,3 @@
-from computaco.environments.conversation import Conversation, TextMessage
 from computaco.agents.agent import Agent
 from computils.engines.base import CompletionEngine, ConversationEngine
 

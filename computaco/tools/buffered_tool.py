@@ -9,15 +9,32 @@ from computaco.tools.tool import Tool
 
 @attr.s
 class BufferedTool(Tool):
+
+    only_textio: bool = attr.ib(default=False)
+
     @dataclass
-    class T_INPUT:
+    class _T_INPUT_COMPLEX:
         text_input: str
         scroll: tuple[int, int] = (0, 0)
 
     @dataclass
-    class T_OUTPUT:
+    class _T_OUTPUT_COMPLEX:
         new_output: str
         window: List[str]
+
+    @property
+    def T_INPUT(self):
+        if self.only_textio:
+            return str
+        else:
+            return self._T_INPUT_COMPLEX
+
+    @property
+    def T_OUTPUT(self):
+        if self.only_textio:
+            return str
+        else:
+            return self._T_OUTPUT_COMPLEX
 
     cursor_pos: tuple[int, int] = (0, 0)
     window_size: tuple[int, int] = (0, 0)

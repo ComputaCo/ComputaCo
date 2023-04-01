@@ -53,4 +53,24 @@ LanguageTool
 
 VisionLanguageTool
 
+###########################3
 
+Agents:
+- Language interaction agents
+    - langchain agent
+    ------ THIS IS A LANG TOOL run wlid / browser agent - this can also be a language tool
+- Computer interaction agents
+    - adept
+    - computatrum
+
+Communication modality:
+- always text
+- sometimes also vision
+
+Operation modality:
+- language tools
+    - browser tool
+    - ide
+- computer envs
+    - local gui
+    - vnc
