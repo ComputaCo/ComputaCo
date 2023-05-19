@@ -74,3 +74,21 @@ Operation modality:
 - computer envs
     - local gui
     - vnc
+
+# Usage
+
+```bash
+$ computaco # starts computaco server using defaults
+```
+
+```yml
+# computaco.json
+processes:
+- "processes/**"
+- "/path/to/other/processes/**"
+
+models:
+- gpt-4
+- gpt-3.5-turbo
+
+```
